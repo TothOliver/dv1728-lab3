@@ -6,6 +6,6 @@
 int main(int argc, char *argv[]){
   
   /* Do magic */
-  
+  printf("Test commit\n");
 
 }
