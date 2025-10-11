@@ -11,6 +11,8 @@
 #include <errno.h>
 #include <stdint.h>
 
+ssize_t readMsg(int sockfd, char *buf, size_t bufsize, int seconds);
+
 int main(int argc, char *argv[]){
 
   /* Do magic */
@@ -121,5 +123,91 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
 
-  printf("connected!\n");
+
+  fd_set reading;
+  struct timeval timeout;
+  int rc;
+
+  char buf[1000];
+  memset(&buf, 0, sizeof(buf));
+  ssize_t byte_size;
+  byte_size = readMsg(sockfd, buf, sizeof(buf), 2);
+
+  if(byte_size <= 0){
+    freeaddrinfo(results);
+    close(sockfd);
+    fprintf(stderr, "ERROR: read failed!\n");
+    return EXIT_FAILURE;
+  }
+
+  if(strcmp(buf, "HELLO 1\n") != 0){
+    freeaddrinfo(results);
+    close(sockfd);
+    fprintf(stderr, "ERROR: wrong read: %s\n", buf);
+    return EXIT_FAILURE;
+  }
+
+  char msg[100];
+  snprintf(msg, sizeof(msg), "NICK %s\n", nickname);
+
+  ssize_t sent = write(sockfd, msg, strlen(msg));
+  if(sent == -1){
+    freeaddrinfo(results);
+    close(sockfd);
+    fprintf(stderr, "ERROR: sendto failed\n");
+    return EXIT_FAILURE;
+  }
+  printf("Send: %s\n", msg);
+
+  memset(&buf, 0, sizeof(buf));
+  byte_size = readMsg(sockfd, buf, sizeof(buf), 2);
+
+  if(byte_size <= 0){
+    freeaddrinfo(results);
+    close(sockfd);
+    fprintf(stderr, "ERROR: read failed!\n");
+    return EXIT_FAILURE;
+  }
+
+  if(strcmp(buf, "OK\n") != 0){
+    freeaddrinfo(results);
+    close(sockfd);
+    printf("%s\n", buf);
+    return EXIT_FAILURE;
+  }
+  printf("Buf: %s\n", buf);
+
+}
+
+ssize_t readMsg(int sockfd, char *buf, size_t bufsize, int seconds) {
+    fd_set readfds;
+    struct timeval timeout;
+    int rc;
+
+    FD_ZERO(&readfds);
+    FD_SET(sockfd, &readfds);
+
+    memset(&timeout, 0, sizeof(timeout));
+    timeout.tv_sec = seconds;
+    timeout.tv_usec = 0;
+
+    rc = select(sockfd + 1, &readfds, NULL, NULL, &timeout);
+
+    if(rc < 0){
+      perror("select");
+      return -1;
+    } 
+    else if(rc == 0){
+        fprintf(stderr, "ERROR: Timeout waiting for data\n");
+        return 0;
+    }
+
+    ssize_t byte_size = read(sockfd, buf, bufsize - 1);
+    if(byte_size <= 0){
+        perror("read");
+        return -1;
+    }
+
+    buf[byte_size] = '\0';
+    return byte_size;
 }
