@@ -140,7 +140,7 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
 
-  if(strncmp(buf, "Hello 1.0", 9) != 0){
+  if(strcmp(buf, "HELLO 1\n") != 0){
     fprintf(stderr, "ERROR: wrong read: %s\n", buf);
     freeaddrinfo(results);
     close(sockfd);
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]){
   ssize_t byte_read;
   fd_set readfds;
 
-
+  
   while(1){
     FD_ZERO(&readfds);
     FD_SET(sockfd, &readfds);
@@ -204,6 +204,7 @@ int main(int argc, char *argv[]){
         printf("Server closed connection.\n");
         break;
       }
+
       fflush(stdout);
     }
 
