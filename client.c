@@ -140,7 +140,7 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
 
-  if(strncmp(buf, "HELLO 1", 7) != 0 && strncmp(buf, "Hello 1.0", 9) != 0){
+  if(strncmp(buf, "Hello 1.0", 9) != 0){
     fprintf(stderr, "ERROR: wrong read: %s\n", buf);
     freeaddrinfo(results);
     close(sockfd);
@@ -204,9 +204,6 @@ int main(int argc, char *argv[]){
         printf("Server closed connection.\n");
         break;
       }
-            
-      recvbuf[byte_read] = '\0';
-      printf("%s", recvbuf);
       fflush(stdout);
     }
 
@@ -224,7 +221,7 @@ int main(int argc, char *argv[]){
       }
 
       char msg[600];
-      //snprintf(msg, sizeof(msg), "MSG %s\n", line);
+      snprintf(msg, sizeof(msg), "MSG %s\n", line);
       ssize_t sentMsg = write(sockfd, msg, strlen(msg));
       if(sentMsg == -1){
         fprintf(stderr, "ERROR: sendto failed\n");
