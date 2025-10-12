@@ -178,10 +178,10 @@ int main(int argc, char *argv[]){
   printf("Buf: %s\n", buf);
 
   char recvbuf[1024];
+  int stdin_closed = 0;
   ssize_t byte_read;
   fd_set readfds;
 
-  
   while(1){
     FD_ZERO(&readfds);
     FD_SET(sockfd, &readfds);
@@ -205,28 +205,30 @@ int main(int argc, char *argv[]){
         break;
       }
 
+      recvbuf[byte_read] = '\0';
+      printf("%s", recvbuf);
       fflush(stdout);
     }
 
-    if(FD_ISSET(STDIN_FILENO, &readfds)){
+    if(FD_ISSET(STDIN_FILENO, &readfds) && !stdin_closed){
       char line[512];
 
       if(fgets(line, sizeof(line), stdin) == NULL){
-        printf("EOF detected, closing connection.\n");
-        break;
-      }
-
-      line[strcspn(line, "\n")] = '\0';
-      if(strlen(line) == 0){
+        stdin_closed = 1;
         continue;
       }
 
+      line[strcspn(line, "\r\n")] = '\0';
+      if(line[0] == '\0')
+        continue;
+
       char msg[600];
       snprintf(msg, sizeof(msg), "MSG %s\n", line);
-      ssize_t sentMsg = write(sockfd, msg, strlen(msg));
-      if(sentMsg == -1){
-        fprintf(stderr, "ERROR: sendto failed\n");
-        break;
+      ssize_t sent = write(sockfd, msg, strlen(msg));
+      if(sent == -1){
+        close(sockfd);
+        perror("write");
+        return -1;
       }
     }
   }
