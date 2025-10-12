@@ -140,10 +140,10 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
 
-  if(strcmp(buf, "HELLO 1\n") != 0){
+  if(strncmp(buf, "HELLO 1", 7) != 0 && strncmp(buf, "Hello 1.0", 9) != 0){
+    fprintf(stderr, "ERROR: wrong read: %s\n", buf);
     freeaddrinfo(results);
     close(sockfd);
-    fprintf(stderr, "ERROR: wrong read: %s\n", buf);
     return EXIT_FAILURE;
   }
 
@@ -178,8 +178,9 @@ int main(int argc, char *argv[]){
   printf("Buf: %s\n", buf);
 
   char recvbuf[1024];
-  ssize_t bytes_read;
+  ssize_t byte_read;
   fd_set readfds;
+
 
   while(1){
     FD_ZERO(&readfds);
@@ -187,14 +188,14 @@ int main(int argc, char *argv[]){
     FD_SET(STDIN_FILENO, &readfds);
 
     int maxfd = (sockfd > STDIN_FILENO) ? sockfd : STDIN_FILENO;
-    int rc = select(sockfd + 1, &readfds, NULL, NULL, NULL);
+    int rc = select(maxfd + 1, &readfds, NULL, NULL, NULL);
     if(rc < 0){
       perror("select");          
       break;
     }
 
     if(FD_ISSET(sockfd, &readfds)){
-      ssize_t byte_read = read(sockfd, recvbuf, sizeof(recvbuf) - 1);
+      byte_read = read(sockfd, recvbuf, sizeof(recvbuf) - 1);
       if(byte_read < 0){
         perror("read");
         break;
@@ -204,14 +205,14 @@ int main(int argc, char *argv[]){
         break;
       }
             
-      recvbuf[bytes_read] = '\0';
+      recvbuf[byte_read] = '\0';
       printf("%s", recvbuf);
       fflush(stdout);
     }
 
     if(FD_ISSET(STDIN_FILENO, &readfds)){
       char line[512];
-      
+
       if(fgets(line, sizeof(line), stdin) == NULL){
         printf("EOF detected, closing connection.\n");
         break;
@@ -223,8 +224,8 @@ int main(int argc, char *argv[]){
       }
 
       char msg[600];
-      snprintf(msg, sizeof(msg), "MSG %s\n", line);
-      ssize_t sentMsg = write(sockfd, buf, strlen(buf));
+      //snprintf(msg, sizeof(msg), "MSG %s\n", line);
+      ssize_t sentMsg = write(sockfd, msg, strlen(msg));
       if(sentMsg == -1){
         fprintf(stderr, "ERROR: sendto failed\n");
         break;
