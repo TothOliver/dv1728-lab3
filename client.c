@@ -147,17 +147,17 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
 
-  char msg[100];
-  snprintf(msg, sizeof(msg), "NICK %s\n", nickname);
+  memset(&buf, 0, sizeof(buf));
+  snprintf(buf, sizeof(buf), "NICK %s\n", nickname);
 
-  ssize_t sent = write(sockfd, msg, strlen(msg));
+  ssize_t sent = write(sockfd, buf, strlen(buf));
   if(sent == -1){
     freeaddrinfo(results);
     close(sockfd);
     fprintf(stderr, "ERROR: sendto failed\n");
     return EXIT_FAILURE;
   }
-  printf("Send: %s\n", msg);
+  printf("Send: %s\n", buf);
 
   memset(&buf, 0, sizeof(buf));
   byte_size = readMsg(sockfd, buf, sizeof(buf), 2);
@@ -176,6 +176,62 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
   printf("Buf: %s\n", buf);
+
+  char recvbuf[1024];
+  ssize_t bytes_read;
+  fd_set readfds;
+
+  while(1){
+    FD_ZERO(&readfds);
+    FD_SET(sockfd, &readfds);
+    FD_SET(STDIN_FILENO, &readfds);
+
+    int maxfd = (sockfd > STDIN_FILENO) ? sockfd : STDIN_FILENO;
+    int rc = select(sockfd + 1, &readfds, NULL, NULL, NULL);
+    if(rc < 0){
+      perror("select");          
+      break;
+    }
+
+    if(FD_ISSET(sockfd, &readfds)){
+      ssize_t byte_read = read(sockfd, recvbuf, sizeof(recvbuf) - 1);
+      if(byte_read < 0){
+        perror("read");
+        break;
+      }
+      else if(byte_read == 0){
+        printf("Server closed connection.\n");
+        break;
+      }
+            
+      recvbuf[bytes_read] = '\0';
+      printf("%s", recvbuf);
+      fflush(stdout);
+    }
+
+    if(FD_ISSET(STDIN_FILENO, &readfds)){
+      char line[512];
+      
+      if(fgets(line, sizeof(line), stdin) == NULL){
+        printf("EOF detected, closing connection.\n");
+        break;
+      }
+
+      line[strcspn(line, "\n")] = '\0';
+      if(strlen(line) == 0){
+        continue;
+      }
+
+      char msg[600];
+      snprintf(msg, sizeof(msg), "MSG %s\n", line);
+      ssize_t sentMsg = write(sockfd, buf, strlen(buf));
+      if(sentMsg == -1){
+        fprintf(stderr, "ERROR: sendto failed\n");
+        break;
+      }
+    }
+  }
+  close(sockfd);
 
 }
 
