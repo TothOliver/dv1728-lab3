@@ -88,7 +88,7 @@ int main(int argc, char *argv[]){
   int sockfd, con;
 
   memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_UNSPEC;
+  hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_STREAM;
 
   int status = getaddrinfo(host, port, &hints, &results);
@@ -97,6 +97,7 @@ int main(int argc, char *argv[]){
     fprintf(stderr, "ERROR: RESOLVE ISSUE");
     return EXIT_FAILURE;
   }
+  printf("getaddrinfo\n");
 
   for(struct addrinfo *p = results; p != NULL; p = p->ai_next){
     sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
@@ -122,7 +123,6 @@ int main(int argc, char *argv[]){
     freeaddrinfo(results);
     return EXIT_FAILURE;
   }
-
 
   fd_set reading;
   struct timeval timeout;
