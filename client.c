@@ -140,7 +140,7 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
 
-  if(strcmp(buf, "HELLO 1\n") != 0 && strcmp(buf, "Hello 1.0\n")){
+  if(strcmp(buf, "HELLO 1\n") != 0 && strcmp(buf, "Hello 1.0\n") != 0){
     fprintf(stderr, "ERROR: wrong read: %s\n", buf);
     freeaddrinfo(results);
     close(sockfd);
@@ -169,7 +169,7 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
 
-  if(strcmp(buf, "OK\n") != 0){
+  if(strncmp(buf, "OK", 2) != 0){
     freeaddrinfo(results);
     close(sockfd);
     printf("%s\n", buf);
