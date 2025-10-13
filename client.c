@@ -82,7 +82,7 @@ int main(int argc, char *argv[]){
     }
   }
 
-  printf("Host: %s, Port: %s, Nickname: %s\n",host, port, nickname);
+  //printf("Host: %s, Port: %s, Nickname: %s\n",host, port, nickname);
 
   struct addrinfo hints, *results;
   int sockfd, con;
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
 
-  if(strcmp(buf, "HELLO 1\n") != 0 && strcmp(buf, "Hello 1.0\n") != 0){
+ if(strcmp(buf, "HELLO 1\n") != 0 && strcmp(buf, "Hello 1.0\n") != 0){
     fprintf(stderr, "ERROR: wrong read: %s\n", buf);
     freeaddrinfo(results);
     close(sockfd);
@@ -160,7 +160,7 @@ int main(int argc, char *argv[]){
   printf("Send: %s\n", buf);
 
   memset(&buf, 0, sizeof(buf));
-  byte_size = readMsg(sockfd, buf, sizeof(buf), 2);
+  byte_size = readMsg(sockfd, buf, sizeof(buf), 5);
 
   if(byte_size <= 0){
     freeaddrinfo(results);
@@ -211,7 +211,7 @@ int main(int argc, char *argv[]){
     }
 
     if(FD_ISSET(STDIN_FILENO, &readfds) && !stdin_closed){
-      char line[512];
+      char line[254];
 
       if(fgets(line, sizeof(line), stdin) == NULL){
         stdin_closed = 1;
@@ -233,7 +233,7 @@ int main(int argc, char *argv[]){
     }
   }
   close(sockfd);
-
+  return 0;
 }
 
 ssize_t readMsg(int sockfd, char *buf, size_t bufsize, int seconds) {
@@ -252,7 +252,7 @@ ssize_t readMsg(int sockfd, char *buf, size_t bufsize, int seconds) {
 
     if(rc < 0){
       perror("select");
-      return -1;
+      return 1;
     } 
     else if(rc == 0){
         fprintf(stderr, "ERROR: Timeout waiting for data\n");
