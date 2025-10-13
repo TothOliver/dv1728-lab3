@@ -82,7 +82,8 @@ int main(int argc, char *argv[]){
     }
   }
 
-  //printf("Host: %s, Port: %s, Nickname: %s\n",host, port, nickname);
+  printf("Host: %s, Port: %s, Nickname: %s\n",host, port, nickname);
+  fflush(stdout);
 
   struct addrinfo hints, *results;
   int sockfd, con;
@@ -98,6 +99,7 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
   printf("getaddrinfo\n");
+  fflush(stdout);
 
   for(struct addrinfo *p = results; p != NULL; p = p->ai_next){
     sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
@@ -146,7 +148,6 @@ int main(int argc, char *argv[]){
     close(sockfd);
     return EXIT_FAILURE;
   }
-  
 
   memset(&buf, 0, sizeof(buf));
   snprintf(buf, sizeof(buf), "NICK %s\n", nickname);
@@ -159,9 +160,10 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
   printf("Send: %s\n", buf);
+  fflush(stdout);
 
   memset(&buf, 0, sizeof(buf));
-  byte_size = readMsg(sockfd, buf, sizeof(buf), 10);
+  byte_size = readMsg(sockfd, buf, sizeof(buf), 5);
 
   if(byte_size <= 0){
     freeaddrinfo(results);
@@ -177,6 +179,7 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
   printf("Buf: %s\n", buf);
+  fflush(stdout);
 
   char recvbuf[1024];
   int stdin_closed = 0;
