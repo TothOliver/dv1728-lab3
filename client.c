@@ -210,8 +210,21 @@ int main(int argc, char *argv[]){
       }
 
       recvbuf[byte_read] = '\0';
-      printf("%s", recvbuf);
-      fflush(stdout);
+      if(strncmp(recvbuf, "MSG ", 4) == 0){
+        char *msg = recvbuf + 4;
+        printf("%s", msg);
+        fflush(stdout);
+      }
+      else if(strncmp(recvbuf, "ERROR ", 6) == 0){
+        char *error = recvbuf + 6;
+        fprintf(stderr, "%s", error);
+        fflush(stderr);
+      }
+      else{
+        printf("%s", recvbuf);
+        fflush(stdout);
+      }
+
     }
 
     if(FD_ISSET(STDIN_FILENO, &readfds) && !stdin_closed){
