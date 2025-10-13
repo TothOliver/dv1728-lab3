@@ -146,6 +146,7 @@ int main(int argc, char *argv[]){
     close(sockfd);
     return EXIT_FAILURE;
   }
+  
 
   memset(&buf, 0, sizeof(buf));
   snprintf(buf, sizeof(buf), "NICK %s\n", nickname);
@@ -160,7 +161,7 @@ int main(int argc, char *argv[]){
   printf("Send: %s\n", buf);
 
   memset(&buf, 0, sizeof(buf));
-  byte_size = readMsg(sockfd, buf, sizeof(buf), 5);
+  byte_size = readMsg(sockfd, buf, sizeof(buf), 10);
 
   if(byte_size <= 0){
     freeaddrinfo(results);
