@@ -10,6 +10,8 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
+#include <termios.h>
+#include <termios.h>
 
 ssize_t readMsg(int sockfd, char *buf, size_t bufsize, int seconds);
 
@@ -98,8 +100,6 @@ int main(int argc, char *argv[]){
     fprintf(stderr, "ERROR: RESOLVE ISSUE");
     return EXIT_FAILURE;
   }
-  printf("getaddrinfo\n");
-  fflush(stdout);
 
   for(struct addrinfo *p = results; p != NULL; p = p->ai_next){
     sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
@@ -186,6 +186,12 @@ int main(int argc, char *argv[]){
   ssize_t byte_read;
   fd_set readfds;
 
+  struct termios oldt, newt;
+  tcgetattr(STDIN_FILENO, &oldt);
+  newt = oldt;
+  newt.c_lflag &= ~(ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
   while(1){
     FD_ZERO(&readfds);
     FD_SET(sockfd, &readfds);
@@ -212,7 +218,7 @@ int main(int argc, char *argv[]){
       recvbuf[byte_read] = '\0';
 
       char* line = strtok(recvbuf, "\n");
-      while(line) {
+      while(line){
         if(strncmp(line, "MSG ", 4) == 0){
           printf("%s\n", line + 4);
           fflush(stdout);
@@ -227,7 +233,7 @@ int main(int argc, char *argv[]){
         }
 
         line = strtok(NULL, "\n");
-    }
+      }
 
     }
 
@@ -253,6 +259,8 @@ int main(int argc, char *argv[]){
       }
     }
   }
+  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+
   close(sockfd);
   return 0;
 }
