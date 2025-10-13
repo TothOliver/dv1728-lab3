@@ -210,20 +210,24 @@ int main(int argc, char *argv[]){
       }
 
       recvbuf[byte_read] = '\0';
-      if(strncmp(recvbuf, "MSG ", 4) == 0){
-        char *msg = recvbuf + 4;
-        printf("%s", msg);
-        fflush(stdout);
-      }
-      else if(strncmp(recvbuf, "ERROR ", 6) == 0){
-        char *error = recvbuf + 6;
-        fprintf(stderr, "%s", error);
-        fflush(stderr);
-      }
-      else{
-        printf("%s", recvbuf);
-        fflush(stdout);
-      }
+
+      char* line = strtok(recvbuf, "\n");
+      while(line) {
+        if(strncmp(line, "MSG ", 4) == 0){
+          printf("%s\n", line + 4);
+          fflush(stdout);
+        }
+        else if(strncmp(line, "ERROR ", 6) == 0){
+          fprintf(stderr, "%s\n", line + 6);
+          fflush(stderr);
+        }
+        else{
+          printf("%s\n", line);
+          fflush(stdout);
+        }
+
+        line = strtok(NULL, "\n");
+    }
 
     }
 
