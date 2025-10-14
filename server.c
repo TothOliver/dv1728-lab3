@@ -13,6 +13,13 @@
 #include <termios.h>
 #include <termios.h>
 
+enum ClientState {STATE_HELLO, STATE_NICK, STATE_CHAT};
+
+typedef struct{
+  int fd;
+  enum ClientState state;
+  char nickname[32];
+}Client;
 
 int main(int argc, char *argv[]){
   
@@ -129,20 +136,28 @@ int main(int argc, char *argv[]){
   }
   printf("We listen :D\n");
 
-
-  int clients[100];
-  for(int i = 0; i < 100; i++)
-    clients[i] = -1;
+  Client clients[100];
+  for(int i = 0; i < 100; i++){
+    clients[i].fd = -1;
+    clients[i].state = STATE_HELLO;
+  }
 
   fd_set readfds;
-  int max_fd = sockfd;  
-  int rc;
+  int rc, maxfd;
 
   while(1){
     FD_ZERO(&readfds);
     FD_SET(sockfd, &readfds);
+    maxfd = sockfd;  
 
-    rc = select(sockfd+1, &readfds, NULL, NULL, NULL);
+    for (int i = 0; i < 100; i++) {
+    if(clients[i].fd != -1){
+        FD_SET(clients[i].fd, &readfds);
+        if(clients[i].fd > maxfd)
+          maxfd = clients[i].fd;
+      } 
+    }
+    rc = select(maxfd+1, &readfds, NULL, NULL, NULL);
 
     if(rc < 0){
       perror("select");          
@@ -151,30 +166,81 @@ int main(int argc, char *argv[]){
     if(FD_ISSET(sockfd, &readfds)){
       struct sockaddr_storage client_addr;
       socklen_t addrlen = sizeof(client_addr);
-      int new_fd = accept(sockfd, (struct sockaddr*)&client_addr, &addrlen);
-      if(new_fd < 0){
+      int newfd = accept(sockfd, (struct sockaddr*)&client_addr, &addrlen);
+      if(newfd < 0){
         perror("accept");
         continue;
       }
 
       int placed = 0;
       for(int i = 0; i < 100; i++){
-        if(clients[i] == -1){
-          clients[i] = new_fd;
-          placed = 1;
-          break;
+         if(clients[i].fd == -1){
+            clients[i].fd = newfd;
+            clients[i].state = STATE_NICK;
+            write(newfd, "HELLO 1\n", 8);
+            placed = 1;
+            printf("Accepted new client (fd=%d)\n", newfd);
+            break;
         }
       }
 
       if(!placed){
         fprintf(stderr, "Server full, rejecting connection\n");
-        close(new_fd);
+        close(newfd);
       }
-      else{
-        printf("Accepted new client (fd=%d)\n", new_fd);
-      }
-
     }
+    
+    for(int i = 0; i < 100; i++){
+      int clientfd = clients[i].fd;
+      if(clientfd == -1) 
+          continue;
 
-  }
+      if(FD_ISSET(clientfd, &readfds)){
+        char buf[1000];
+        memset(&buf, 0, sizeof(buf));
+        ssize_t byte_size = read(clientfd, buf, sizeof(buf) - 1);
+
+        if(byte_size <= 0){
+          close(clientfd);
+          clients[i].fd = -1;
+          printf("Client %d disconnected\n", clientfd);
+          continue;
+        }
+
+        if(clients[i].state == STATE_NICK){
+
+          if(strncmp(buf, "NICK ", 5) == 0){
+            strncpy(clients[i].nickname, buf + 5, sizeof(clients[i].nickname) - 1);
+            clients[i].nickname[strcspn(clients[i].nickname, "\r\n")] = '\0';
+            write(clientfd, "OK\n", 3);
+            clients[i].state = STATE_CHAT;
+          }
+          else {
+            write(clientfd, "ERR Invalid protocol used\n", 4);
+          }
+        }
+        else if(clients[i].state == STATE_CHAT){
+          if(strncmp(buf, "MSG ", 4) == 0){
+            char* msg = buf + 4;
+            char output[1000];
+            snprintf(output, sizeof(output), "%s: %s", clients[i].nickname, msg);
+          
+            for(int j = 0; j < 100; j++){
+              if(clients[j].fd != -1 && clients[j].state == STATE_CHAT){
+                ssize_t sent = write(clients[j].fd, output, strlen(output));
+                if(sent == -1){
+                  perror("write to client");
+                }
+              }
+            }
+            printf("%s", output);
+          }
+          else{
+             write(clientfd, "ERROR\n", 6);
+          }
+        }
+      }
+    }
+  } 
+  return 0;
 }
