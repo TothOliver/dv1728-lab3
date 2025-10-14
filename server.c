@@ -208,10 +208,26 @@ int main(int argc, char *argv[]){
         }
 
         if(clients[i].state == STATE_NICK){
-
           if(strncmp(buf, "NICK ", 5) == 0){
+            char *nickname = buf + 5;
+            nickname[strcspn(nickname, "\r\n")] = '\0';
+
+            if(strlen(nickname) == 0 || strlen(nickname) > 12) {
+              write(clientfd, "ERR Nickname too long\n", 22);
+              continue;
+            }
+
+            for(size_t i = 0; i < strlen(nickname); i++){
+              char c = nickname[i];
+              if(!isalnum((unsigned char)c) && c != '_'){
+                fprintf(stderr, "Error: Nickname contains invalid character\n");
+                exit(EXIT_FAILURE);
+              }
+            }
+
             strncpy(clients[i].nickname, buf + 5, sizeof(clients[i].nickname) - 1);
             clients[i].nickname[strcspn(clients[i].nickname, "\r\n")] = '\0';
+
             write(clientfd, "OK\n", 3);
             clients[i].state = STATE_CHAT;
           }
@@ -223,7 +239,7 @@ int main(int argc, char *argv[]){
           if(strncmp(buf, "MSG ", 4) == 0){
             char* msg = buf + 4;
             char output[1000];
-            snprintf(output, sizeof(output), "%s: %s", clients[i].nickname, msg);
+            snprintf(output, sizeof(output), "MSG %s %s", clients[i].nickname, msg);
           
             for(int j = 0; j < 100; j++){
               if(clients[j].fd != -1 && clients[j].state == STATE_CHAT){
