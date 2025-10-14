@@ -11,7 +11,6 @@
 #include <errno.h>
 #include <stdint.h>
 #include <termios.h>
-#include <termios.h>
 
 enum ClientState {STATE_HELLO, STATE_NICK, STATE_CHAT};
 
@@ -134,7 +133,7 @@ int main(int argc, char *argv[]){
     fprintf(stderr, "ERROR: LISTEN FAILED %d\n", sockfd);
     return EXIT_FAILURE;
   }
-  printf("We listen :D\n");
+  printf("Server listening...\n");
 
   Client clients[100];
   for(int i = 0; i < 100; i++){
@@ -179,6 +178,7 @@ int main(int argc, char *argv[]){
             clients[i].state = STATE_NICK;
             write(newfd, "HELLO 1\n", 8);
             placed = 1;
+            
             printf("Accepted new client (fd=%d)\n", newfd);
             break;
         }
