@@ -91,7 +91,7 @@ int main(int argc, char *argv[]){
   int sockfd, con;
 
   memset(&hints, 0, sizeof hints);
-  hints.ai_family = AF_INET;
+  hints.ai_family = AF_UNSPEC;
   hints.ai_socktype = SOCK_STREAM;
 
   int status = getaddrinfo(host, port, &hints, &results);
@@ -234,7 +234,6 @@ int main(int argc, char *argv[]){
 
         line = strtok(NULL, "\n");
       }
-
     }
 
     if(FD_ISSET(STDIN_FILENO, &readfds) && !stdin_closed){
