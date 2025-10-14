@@ -221,7 +221,7 @@ int main(int argc, char *argv[]){
               char c = nickname[i];
               if(!isalnum((unsigned char)c) && c != '_'){
                 fprintf(stderr, "Error: Nickname contains invalid character\n");
-                exit(EXIT_FAILURE);
+                continue;
               }
             }
 
