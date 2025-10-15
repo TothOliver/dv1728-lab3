@@ -165,7 +165,7 @@ int main(int argc, char *argv[]){
     if(FD_ISSET(sockfd, &readfds)){
       struct sockaddr_storage client_addr;
       socklen_t addrlen = sizeof(client_addr);
-      
+
       int newfd = accept(sockfd, (struct sockaddr*)&client_addr, &addrlen);
       if(newfd < 0){
         perror("accept");
@@ -254,7 +254,10 @@ int main(int argc, char *argv[]){
             printf("%s", output);
           }
           else{
-             write(clientfd, "ERROR\n", 6);
+            char* msg = buf;
+            char errorMsg[1000];
+            snprintf(errorMsg, sizeof(errorMsg), "ERROR %s", msg);
+            write(clientfd, errorMsg, strlen(errorMsg));
           }
         }
       }
