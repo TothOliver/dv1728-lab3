@@ -234,7 +234,6 @@ int main(int argc, char *argv[]){
         line = strtok(NULL, "\n");
       }
     }
-
     if(FD_ISSET(STDIN_FILENO, &readfds) && !stdin_closed){
       char line[254];
 
