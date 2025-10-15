@@ -306,9 +306,49 @@ int main(int argc, char *argv[]){
                 strncat(reply, line, sizeof(reply) - strlen(reply) - 1);
               }
             }
-            
+
             strncat(reply, "\n", sizeof(reply) - strlen(reply) - 1);
             write(clientfd, reply, strlen(reply));
+          }
+          else if(strncmp(buf, "KICK ", 5) == 0){
+            char resp[128], target[64], secret[128];
+            int parsed = sscanf(buf, "KICK %63s %127s", target, secret);
+
+            if(parsed < 2){
+              write(clientfd, "CPKICK: Wrong format\n\n", strlen(resp));
+              continue;
+            }
+
+            int found = -1;
+            for(int j = 0; j < 100; j++){
+              if(clients[j].fd != -1 &&
+                clients[j].state == STATE_CHAT &&
+                strcmp(clients[j].nickname, target) == 0){
+                found = j;
+                break;
+              }
+            }
+
+            if(found == -1){
+              snprintf(resp, sizeof(resp), "CPKICK: %s not found\n\n", target);
+              write(clientfd, resp, strlen(resp));
+              continue;
+            }
+
+            if(strcmp(secret, "mfo:.ai?fqajdalf832!") != 0){
+              write(clientfd, "CPKICK: Wrong secret \n\n", strlen(resp));
+              continue;
+            }
+            
+            char kickedMsg[64];
+            snprintf(kickedMsg, sizeof(kickedMsg), "KICKED by %s\n", clients[i].nickname);
+            write(clients[found].fd, kickedMsg, strlen(kickedMsg));
+            close(clients[found].fd);
+            clients[found].fd = -1;
+
+            snprintf(resp, sizeof(resp), "CPKICK: %s removed\n\n", target);
+            write(clientfd, resp, strlen(resp));
+
           }
           else{
             char* msg = buf;
