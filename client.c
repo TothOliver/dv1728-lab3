@@ -219,11 +219,7 @@ int main(int argc, char *argv[]){
 
       char* line = strtok(recvbuf, "\n");
       while(line){
-        if(strncmp(line, "MSG ", 4) == 0){
-          printf("%s\n", line + 4);
-          fflush(stdout);
-        }
-        else if(strncmp(line, "ERROR ", 6) == 0){
+        if(strncmp(line, "ERROR ", 6) == 0){
           fprintf(stderr, "%s\n", line + 6);
           fflush(stderr);
         }
