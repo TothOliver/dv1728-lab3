@@ -278,12 +278,12 @@ int main(int argc, char *argv[]){
             printf("%s", output);
           }
           else if(strncmp(buf, "Status\n", 7) == 0){
+
             int active = 0;
             for(int j = 0; j < 100; j++){
               if(clients[j].fd != -1)
                   active++;
             }
-            
             time_t now = time(NULL);
             long uptime = (long)(now - server_start);
             char statusMsg[1000];
@@ -306,6 +306,9 @@ int main(int argc, char *argv[]){
                 strncat(reply, line, sizeof(reply) - strlen(reply) - 1);
               }
             }
+            
+            strncat(reply, "\n", sizeof(reply) - strlen(reply) - 1);
+            write(clientfd, reply, strlen(reply));
           }
           else{
             char* msg = buf;
