@@ -249,7 +249,7 @@ int main(int argc, char *argv[]){
         continue;
 
       char msg[600];
-      snprintf(msg, sizeof(msg), "MSG %s\n", line);
+      snprintf(msg, sizeof(msg), "MSG %s %s\n", nickname, line);
       ssize_t sent = write(sockfd, msg, strlen(msg));
       if(sent == -1){
         close(sockfd);
