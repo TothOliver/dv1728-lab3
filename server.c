@@ -256,7 +256,7 @@ int main(int argc, char *argv[]){
             }
             printf("%s", output);
           }
-          if(strncmp(buf, "Status\n", 4) == 0){
+          else if(strncmp(buf, "Status\n", 4) == 0){
             int active = 0;
             for(int j = 0; j < 100; j++){
               if(clients[j].fd != -1)
