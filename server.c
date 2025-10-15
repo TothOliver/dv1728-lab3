@@ -19,6 +19,10 @@ typedef struct{
   int fd;
   enum ClientState state;
   char nickname[32];
+  int id;
+  char ip[64];
+  int port;
+  time_t connection_start;
 }Client;
 
 int main(int argc, char *argv[]){
@@ -175,16 +179,33 @@ int main(int argc, char *argv[]){
         continue;
       }
 
+      char ipstr[64];
+      int portnum;
+
+      if(client_addr.ss_family == AF_INET){
+          struct sockaddr_in *s = (struct sockaddr_in *)&client_addr;
+          inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof(ipstr));
+          portnum = ntohs(s->sin_port);
+      }else{
+          struct sockaddr_in6 *s = (struct sockaddr_in6 *)&client_addr;
+          inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof(ipstr));
+          portnum = ntohs(s->sin6_port);
+      }
+
       int placed = 0;
       for(int i = 0; i < 100; i++){
-         if(clients[i].fd == -1){
-            clients[i].fd = newfd;
-            clients[i].state = STATE_NICK;
-            write(newfd, "HELLO 1\n", 8);
-            placed = 1;
+        if(clients[i].fd == -1){
+          clients[i].fd = newfd;
+          clients[i].state = STATE_NICK;
+          clients[i].id = i;
+          strncpy(clients[i].ip, ipstr, sizeof(clients[i].ip) - 1);
+          clients[i].port = portnum;
+          clients[i].connection_start = time(NULL);
+          write(newfd, "HELLO 1\n", 8);
+          placed = 1;
             
-            printf("Accepted new client (fd=%d)\n", newfd);
-            break;
+          printf("Accepted new client (fd=%d)\n", newfd);
+          break;
         }
       }
 
@@ -256,7 +277,7 @@ int main(int argc, char *argv[]){
             }
             printf("%s", output);
           }
-          else if(strncmp(buf, "Status\n", 4) == 0){
+          else if(strncmp(buf, "Status\n", 7) == 0){
             int active = 0;
             for(int j = 0; j < 100; j++){
               if(clients[j].fd != -1)
@@ -270,6 +291,21 @@ int main(int argc, char *argv[]){
               host, port, active, uptime);
 
             write(clientfd, statusMsg, strlen(statusMsg));
+          }
+          else if(strncmp(buf, "Clients\n", 8) == 0){
+            char reply[2000];
+            strcpy(reply, "CPCLIENTS\n");
+            time_t now = time(NULL);
+
+            for(int j = 0; j < 100; j++){
+              if(clients[j].fd != -1 && clients[j].state == STATE_CHAT){
+                long connected_time = (long)(now - clients[j].connection_start);
+                char line[1000];
+                snprintf(line, sizeof(line),"%d %s %s:%d %ld\n", 
+                  clients[j].id, clients[j].nickname[0] ? clients[j].nickname : "(none)", clients[j].ip, clients[j].port, connected_time);
+                strncat(reply, line, sizeof(reply) - strlen(reply) - 1);
+              }
+            }
           }
           else{
             char* msg = buf;
