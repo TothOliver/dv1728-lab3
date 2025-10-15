@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <stdint.h>
 #include <termios.h>
+#include <time.h>
 
 enum ClientState {STATE_HELLO, STATE_NICK, STATE_CHAT};
 
@@ -133,6 +134,8 @@ int main(int argc, char *argv[]){
     fprintf(stderr, "ERROR: LISTEN FAILED %d\n", sockfd);
     return EXIT_FAILURE;
   }
+  
+  time_t server_start = time(NULL);
   printf("Server listening...\n");
 
   Client clients[100];
@@ -252,6 +255,22 @@ int main(int argc, char *argv[]){
               }
             }
             printf("%s", output);
+          }
+          if(strncmp(buf, "Status\n", 4) == 0){
+            
+            int active = 0;
+            for(int j = 0; j < 100; j++){
+              if(clients[j].fd != -1)
+                  active++;
+            }
+            
+            time_t now = time(NULL);
+            long uptime = (long)(now - server_start);
+            char statusMsg[1000];
+            snprintf(statusMsg, sizeof(statusMsg), "CPSTATUS\n ListenAddress:%s:%s\n Clients %d\nUpTime %ld\n\n", 
+              host, port, active, uptime);
+
+            write(clientfd, statusMsg, strlen(statusMsg));
           }
           else{
             char* msg = buf;
