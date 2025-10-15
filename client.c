@@ -84,8 +84,8 @@ int main(int argc, char *argv[]){
     }
   }
 
-  printf("Host: %s, Port: %s, Nickname: %s\n",host, port, nickname);
-  fflush(stdout);
+  //printf("Host: %s, Port: %s, Nickname: %s\n",host, port, nickname);
+  //fflush(stdout);
 
   struct addrinfo hints, *results;
   int sockfd, con;
@@ -159,8 +159,8 @@ int main(int argc, char *argv[]){
     fprintf(stderr, "ERROR: sendto failed\n");
     return EXIT_FAILURE;
   }
-  printf("Send: %s\n", buf);
-  fflush(stdout);
+  //printf("Send: %s\n", buf);
+  //fflush(stdout);
 
   memset(&buf, 0, sizeof(buf));
   byte_size = readMsg(sockfd, buf, sizeof(buf), 5);
@@ -178,8 +178,8 @@ int main(int argc, char *argv[]){
     printf("%s\n", buf);
     return EXIT_FAILURE;
   }
-  printf("Buf: %s\n", buf);
-  fflush(stdout);
+  //printf("Buf: %s\n", buf);
+  //fflush(stdout);
 
   char recvbuf[1024];
   int stdin_closed = 0;

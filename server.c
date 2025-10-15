@@ -150,7 +150,7 @@ int main(int argc, char *argv[]){
     maxfd = sockfd;  
 
     for (int i = 0; i < 100; i++) {
-    if(clients[i].fd != -1){
+      if(clients[i].fd != -1){
         FD_SET(clients[i].fd, &readfds);
         if(clients[i].fd > maxfd)
           maxfd = clients[i].fd;
@@ -165,6 +165,7 @@ int main(int argc, char *argv[]){
     if(FD_ISSET(sockfd, &readfds)){
       struct sockaddr_storage client_addr;
       socklen_t addrlen = sizeof(client_addr);
+      
       int newfd = accept(sockfd, (struct sockaddr*)&client_addr, &addrlen);
       if(newfd < 0){
         perror("accept");
@@ -235,6 +236,7 @@ int main(int argc, char *argv[]){
             write(clientfd, "ERR Invalid protocol used\n", 4);
           }
         }
+        
         else if(clients[i].state == STATE_CHAT){
           if(strncmp(buf, "MSG ", 4) == 0){
             char* msg = buf + 4;
@@ -257,6 +259,7 @@ int main(int argc, char *argv[]){
         }
       }
     }
+  
   } 
   return 0;
 }
