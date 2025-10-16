@@ -253,16 +253,21 @@ int main(int argc, char *argv[]){
         continue;
       }
 
-      line[strcspn(line, "\r\n")] = '\0';
-      if(line[0] == '\0')
-        continue;
+      while(fgets(line, sizeof(line), stdin)){
+        line[strcspn(line, "\r\n")] = '\0';
+        if(line[0] == '\0')
+          continue;
 
-      char msg[600];
-      snprintf(msg, sizeof(msg), "MSG %s %s\n", nickname, line);
-      size_t len = strlen(msg);
-      ssize_t sent = send(sockfd, msg, len, MSG_NOSIGNAL);
-      if (sent != (ssize_t)len) {
+        char msg[600];
+        snprintf(msg, sizeof(msg), "MSG %s %s\n", nickname, line);
+        size_t len = strlen(msg);
+        ssize_t sent = send(sockfd, msg, len, MSG_NOSIGNAL);
+        if(sent != (ssize_t)len)
           perror("send");
+      }
+          
+      if(feof(stdin)){
+        stdin_closed = 1;
       }
 
     }
