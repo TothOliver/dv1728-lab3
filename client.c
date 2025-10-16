@@ -83,7 +83,6 @@ int main(int argc, char *argv[]){
       exit(EXIT_FAILURE);
     }
   }
-
   printf("Host: %s, Port: %s, Nickname: %s\n",host, port, nickname);
   fflush(stdout);
 
@@ -248,14 +247,15 @@ int main(int argc, char *argv[]){
 
       char msg[600];
       snprintf(msg, sizeof(msg), "MSG %s %s\n", nickname, line);
-      ssize_t sent = write(sockfd, msg, strlen(msg));
-      if(sent == -1){
-        close(sockfd);
-        perror("write");
-        return -1;
+      size_t len = strlen(msg);
+      ssize_t sent = send(sockfd, msg, len, MSG_NOSIGNAL);
+      if (sent != (ssize_t)len) {
+          perror("send");
       }
+
     }
   }
+  setvbuf(stdin, NULL, _IONBF, 0);
   tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
   close(sockfd);
@@ -285,12 +285,20 @@ ssize_t readMsg(int sockfd, char *buf, size_t bufsize, int seconds) {
         return 0;
     }
 
-    ssize_t byte_size = read(sockfd, buf, bufsize - 1);
-    if(byte_size <= 0){
-        perror("read");
-        return -1;
+    ssize_t total = 0;
+    ssize_t n;
+
+    while((n = read(sockfd, buf + total, bufsize - 1 - total)) > 0){
+      total += n;
+      if(memchr(buf, '\n', total) || total >= (ssize_t)(bufsize - 1))
+        break;
     }
 
-    buf[byte_size] = '\0';
-    return byte_size;
+    if(n < 0){
+      perror("read");
+      return -1;
+    }
+
+    buf[total] = '\0';
+    return total;
 }
