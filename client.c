@@ -137,7 +137,7 @@ int main(int argc, char *argv[]){
   int rc;
 
   char buf[1000];
-  memset(&buf, 0, sizeof(buf));
+  memset(buf, 0, sizeof(buf));
   ssize_t byte_size;
   byte_size = readMsg(sockfd, buf, sizeof(buf), 2);
 
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]){
     return EXIT_FAILURE;
   }
 
-  memset(&buf, 0, sizeof(buf));
+  memset(buf, 0, sizeof(buf));
   snprintf(buf, sizeof(buf), "NICK %s\n", nickname);
 
   ssize_t sent = write(sockfd, buf, strlen(buf));
@@ -171,7 +171,7 @@ int main(int argc, char *argv[]){
   printf("Send: %s\n", buf);
   fflush(stdout);
 
-  memset(&buf, 0, sizeof(buf));
+  memset(buf, 0, sizeof(buf));
   byte_size = readMsg(sockfd, buf, sizeof(buf), 5);
 
   if(byte_size <= 0){
@@ -231,7 +231,7 @@ int main(int argc, char *argv[]){
       char* line = strtok(recvbuf, "\n");
       while(line){
         if(strncmp(line, "MSG ", 4) == 0){
-          printf("%s\n", line);
+          printf("%s\n", line + 4);
           fflush(stdout);
         }
         else if(strncmp(line, "ERROR ", 6) == 0){
