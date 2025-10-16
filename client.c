@@ -20,6 +20,7 @@ int main(int argc, char *argv[]){
   /* Do magic */
   if(argc != 3){
     fprintf(stderr, "Usage: %s host:port nickname\n", argv[0]);
+    fflush(stderr);
     exit(EXIT_FAILURE);
   }
 
@@ -32,12 +33,14 @@ int main(int argc, char *argv[]){
     char *end_bracket = strchr(address_port, ']');
     if(!end_bracket){
       fprintf(stderr, "Error: Not a valid IPv6 adress \n");
+      fflush(stderr);
       exit(EXIT_FAILURE);
     }
 
     size_t host_len = end_bracket - (address_port + 1);
     if(host_len >= sizeof(host)){
       fprintf(stderr, "Error: Host name too long\n");
+      fflush(stderr);
       exit(EXIT_FAILURE);
     }
 
@@ -80,6 +83,7 @@ int main(int argc, char *argv[]){
     char c = nickname[i];
     if(!isalnum((unsigned char)c) && c != '_'){
       fprintf(stderr, "Error: Nickname contains invalid character\n");
+      fflush(stderr);
       exit(EXIT_FAILURE);
     }
   }
@@ -97,6 +101,7 @@ int main(int argc, char *argv[]){
   if(status != 0 || results == NULL)
   {
     fprintf(stderr, "ERROR: RESOLVE ISSUE");
+    fflush(stderr);
     return EXIT_FAILURE;
   }
 
@@ -117,10 +122,12 @@ int main(int argc, char *argv[]){
 
   if(sockfd == -1){
     fprintf(stderr, "ERROR: socket failed\n");
+    fflush(stderr);
     return EXIT_FAILURE;
   }
   if(con == -1){
     fprintf(stderr, "ERROR: CANT CONNECT TO %s\n", host);
+    fflush(stderr);
     freeaddrinfo(results);
     return EXIT_FAILURE;
   }
@@ -138,11 +145,13 @@ int main(int argc, char *argv[]){
     freeaddrinfo(results);
     close(sockfd);
     fprintf(stderr, "ERROR: read failed!\n");
+    fflush(stderr);
     return EXIT_FAILURE;
   }
 
  if(strcmp(buf, "HELLO 1\n") != 0 && strcmp(buf, "Hello 1.0\n") != 0){
     fprintf(stderr, "ERROR: wrong read: %s\n", buf);
+    fflush(stderr);
     freeaddrinfo(results);
     close(sockfd);
     return EXIT_FAILURE;
@@ -156,6 +165,7 @@ int main(int argc, char *argv[]){
     freeaddrinfo(results);
     close(sockfd);
     fprintf(stderr, "ERROR: sendto failed\n");
+    fflush(stderr);
     return EXIT_FAILURE;
   }
   printf("Send: %s\n", buf);
@@ -168,6 +178,7 @@ int main(int argc, char *argv[]){
     freeaddrinfo(results);
     close(sockfd);
     fprintf(stderr, "ERROR: read failed!\n");
+    fflush(stderr);
     return EXIT_FAILURE;
   }
 
@@ -282,6 +293,7 @@ ssize_t readMsg(int sockfd, char *buf, size_t bufsize, int seconds) {
     } 
     else if(rc == 0){
         fprintf(stderr, "ERROR: Timeout waiting for data\n");
+        fflush(stderr);
         return 0;
     }
 
