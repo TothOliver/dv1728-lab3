@@ -190,6 +190,7 @@ int main(int argc, char *argv[]){
   newt = oldt;
   newt.c_lflag &= ~(ECHO);
   tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+  setvbuf(stdin, NULL, _IONBF, 0);
 
   while(1){
     FD_ZERO(&readfds);
@@ -255,7 +256,6 @@ int main(int argc, char *argv[]){
 
     }
   }
-  setvbuf(stdin, NULL, _IONBF, 0);
   tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
 
   close(sockfd);
