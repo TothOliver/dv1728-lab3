@@ -231,7 +231,7 @@ int main(int argc, char *argv[]){
       char* line = strtok(recvbuf, "\n");
       while(line){
         if(strncmp(line, "MSG ", 4) == 0){
-          printf("%s\n", line + 4);
+          printf("%s\n", line);
           fflush(stdout);
         }
         else if(strncmp(line, "ERROR ", 6) == 0){
